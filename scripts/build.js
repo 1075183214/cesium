@@ -457,7 +457,8 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   const builtinFunctions = [];
   const builtinConstants = [];
   const builtinStructs = [];
-
+  const builtinATGlobe = [];//【世纪空间 ATGlobe】 2019-6-4
+  
   const glslFiles = await globby(shaderFiles);
   await Promise.all(
     glslFiles.map(async function (glslFile) {
