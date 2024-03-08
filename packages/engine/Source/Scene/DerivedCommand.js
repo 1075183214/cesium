@@ -79,6 +79,9 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
 }
 
 function getDepthOnlyRenderState(scene, renderState) {
+  if(!renderState){
+    return null; //【世纪空间 ATGlobe】修复renderState为空时崩溃bug
+  }
   const cache = scene._depthOnlyRenderStateCache;
   let depthOnlyState = cache[renderState.id];
   if (!defined(depthOnlyState)) {

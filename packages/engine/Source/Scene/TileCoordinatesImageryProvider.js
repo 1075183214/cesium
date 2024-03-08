@@ -40,6 +40,23 @@ function TileCoordinatesImageryProvider(options) {
   this._tileHeight = defaultValue(options.tileHeight, 256);
 
   this._defaultAlpha = undefined;
+  //【世纪空间 ATGlobe】 反色滤镜
+  /**
+   * The default invertColor of this provider.
+   *
+   * @type {Bool|undefined}
+   * @default undefined
+   */
+  this.defaultInvertColor = undefined;
+
+  /**
+   * The default filterRGB of this provider.
+   *
+   * @type {Array|undefined}
+   * @default undefined
+   */
+  this.defaultFilterRGB = undefined;
+  //【世纪空间 ATGlobe】 反色滤镜
   this._defaultNightAlpha = undefined;
   this._defaultDayAlpha = undefined;
   this._defaultBrightness = undefined;

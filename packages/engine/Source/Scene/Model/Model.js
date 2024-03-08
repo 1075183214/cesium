@@ -166,7 +166,9 @@ function Model(options) {
   Check.typeOf.object("options.loader", options.loader);
   Check.typeOf.object("options.resource", options.resource);
   //>>includeEnd('debug');
-
+  this._atglobeEditor = options.atglobeEditor;      //【世纪空间 ATGlobe】 2020-1-28   倾斜模型编辑修改
+  this._atglobeJzwStyle = options.atglobeJzwStyle;   //【世纪空间 ATGlobe】 2020-2-2   建筑物特效
+  this._atglobeOcclusion = defaultValue(options.atglobeOcclusion, true);  //【世纪空间 ATGlobe】 2020-3-2  gltf部分材质的混乱问题控制
   /**
    * The loader used to load resources for this model.
    *

@@ -611,7 +611,12 @@ Object.defineProperties(Globe.prototype, {
     set: function (material) {
       if (this._material !== material) {
         this._material = material;
-        makeShadersDirty(this);
+        // makeShadersDirty(this);
+        if (material && material.type === "WaJue") {//【世纪空间 ATGlobe】 地形挖掘与淹没
+          makeShadersWaJue(this);
+        } else {
+          makeShadersDirty(this);
+        }
       }
     },
   },
@@ -685,7 +690,41 @@ Object.defineProperties(Globe.prototype, {
     },
   },
 });
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+function makeShadersWaJue(globe) {
+  const defines = [];
 
+  const requireNormals =
+    defined(globe._material) &&
+    (globe._material.shaderSource.match(/slope/) ||
+      globe._material.shaderSource.match("normalEC"));
+
+  const fragmentSources = [GroundAtmosphere];
+  if (
+    defined(globe._material) &&
+    (!requireNormals || globe._terrainProvider.requestVertexNormals)
+  ) {
+    fragmentSources.push(globe._material.shaderSource);
+    //为地形挖掘着色器里添加依赖：defines
+    defines.push('WAJUE');
+    globe._surface._tileProvider.materialUniformMap = globe._material._uniforms;
+  } else {
+    globe._surface._tileProvider.materialUniformMap = undefined;
+  }
+  fragmentSources.push(GlobeFS);
+
+  globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+    sources: [GroundAtmosphere, GlobeVS],
+    defines: defines,
+  });
+
+  globe._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+    sources: fragmentSources,
+    defines: defines,
+  });
+  globe._surfaceShaderSet.material = globe._material;
+}
+//【世纪空间 ATGlobe】 地形挖掘与淹没
 function makeShadersDirty(globe) {
   const defines = [];
 

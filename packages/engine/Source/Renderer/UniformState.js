@@ -16,6 +16,7 @@ import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js"
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import SunLight from "../Scene/SunLight.js";
+import Sampler from "./Sampler.js"; //【世纪空间 ATGlobe】 倾斜模型编辑 add
 
 /**
  * @private
@@ -169,6 +170,9 @@ function UniformState() {
   this._geometricToleranceOverMeter = undefined;
 
   this._minimumDisableDepthTestDistance = undefined;
+
+  //【世纪空间 ATGlobe】 倾斜模型编辑 , 模型编辑为着色器传值的对象
+  this._yp_black_texture = new Sampler();
 }
 
 Object.defineProperties(UniformState.prototype, {

@@ -20,6 +20,9 @@ import SkyBoxVS from "../Shaders/SkyBoxVS.js";
 import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
 
+import Matrix3 from '../Core/Matrix3.js' //【世纪空间 ATGlobe】 天空盒
+import Transforms from '../Core/Transforms.js' //【世纪空间 ATGlobe】 天空盒
+
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
  * <p>
@@ -62,6 +65,7 @@ function SkyBox(options) {
    */
   this.sources = options.sources;
   this._sources = undefined;
+  this.nearGround = options.nearGround; ////【世纪空间 ATGlobe】 是否为近地天空盒
 
   /**
    * Determines if the sky box will be shown.
@@ -166,6 +170,15 @@ SkyBox.prototype.update = function (frameState, useHdr) {
       u_cubeMap: function () {
         return that._cubeMap;
       },
+      //【世纪空间 ATGlobe】 近地天空盒
+      u_rotateMatrix: function () {
+        if (that.nearGround) { //近地天空盒
+          command.modelMatrix = Transforms.eastNorthUpToFixedFrame(frameState.camera._positionWC);
+          return Matrix4.getMatrix3(command.modelMatrix, new Matrix3());
+        }
+        return Matrix3.IDENTITY;
+      }
+      //【世纪空间 ATGlobe】 近地天空盒
     };
 
     const geometry = BoxGeometry.createGeometry(

@@ -35,6 +35,8 @@ import StripeMaterial from "../Shaders/Materials/StripeMaterial.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import WaterMaterial from "../Shaders/Materials/Water.js";
+import YanMoMaterial from '../Shaders/ATGlobe/YanMoMaterial.js' //【世纪空间 ATGlobe】淹没分析
+import WaJueMaterial from '../Shaders/ATGlobe/WaJueMaterial.js' //【世纪空间 ATGlobe】挖掘分析
 
 /**
  * A Material defines surface appearance through a combination of diffuse, specular,
@@ -1686,7 +1688,35 @@ Material._materialCache.addMaterial(Material.ElevationRampType, {
   },
   translucent: false,
 });
+//【世纪空间 ATGlobe】淹没分析 扩展淹没及挖掘材质
+/**
+ * Gets the name of the yanmo material.
+ * @type {String}
+ * @readonly
+ */
+Material.YanMoType = 'YanMo';
+Material._materialCache.addMaterial(Material.YanMoType, {
+  fabric: {
+    type: Material.YanMoType,
+    source: YanMoMaterial
+  },
+  translucent: false
+});
 
+/** 
+ * Gets the name of the yanmo material.
+ * @type {String}
+ * @readonly
+ */
+Material.WaJueType = 'WaJue';
+Material._materialCache.addMaterial(Material.WaJueType, {
+  fabric: {
+    type: Material.WaJueType,
+    source: WaJueMaterial
+  },
+  translucent: false
+});
+//【世纪空间 ATGlobe】淹没分析
 /**
  * Gets the name of the slope ramp material.
  * @type {string}

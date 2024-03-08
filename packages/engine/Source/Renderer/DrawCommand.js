@@ -1,6 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
+import ExpandByATGlobe from '../ATGlobe/ExpandByATGlobe.js';//【世纪空间 ATGlobe】
 
 const Flags = {
   CULL: 1,
@@ -605,6 +606,21 @@ DrawCommand.shallowClone = function (command, result) {
  * @param {PassState} [passState] The state for the current render pass.
  */
 DrawCommand.prototype.execute = function (context, passState) {
+  //【世纪空间 ATGlobe】建筑物混合遮挡，不遮挡底图
+  if(this.pass===4){
+    if( ExpandByATGlobe.mixedOcclusion.enable && ExpandByATGlobe.mixedOcclusion.tilesFbo){
+      if(ExpandByATGlobe.mixedOcclusion.newFrame){
+        ExpandByATGlobe.mixedOcclusion.tilesFboClear.execute(context);
+        ExpandByATGlobe.mixedOcclusion.newFrame = false;
+      }
+      // this.renderState.blending.enabled = false;//混合关闭
+      // this.renderState.cull.enabled = true;//剪裁背面
+      this.framebuffer = ExpandByATGlobe.mixedOcclusion.tilesFbo;
+      context.draw(this, passState);
+      return;
+    }
+  }
+  //【世纪空间 ATGlobe】建筑物混合遮挡，不遮挡底图
   context.draw(this, passState);
 };
 export default DrawCommand;

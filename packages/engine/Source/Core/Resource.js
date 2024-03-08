@@ -549,6 +549,9 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
   // Restore the placeholders, which may have been escaped in objectToQuery or elsewhere
   url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
 
+  //【世纪空间 ATGlobe】将3dtiles中的“+”符号转义下
+  url = url.replace(new RegExp("\\+", "gm"), "%2B")
+
   const templateValues = this._templateValues;
   if (Object.keys(templateValues).length > 0) {
     url = url.replace(/{(.*?)}/g, function (match, key) {

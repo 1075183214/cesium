@@ -98,6 +98,7 @@ function UniformFloatVec2(gl, activeUniform, uniformName, location) {
 
 UniformFloatVec2.prototype.set = function () {
   const v = this.value;
+  if(!v) return ''; //【世纪空间 ATGlobe】 容错处理
   if (!Cartesian2.equals(v, this._value)) {
     Cartesian2.clone(v, this._value);
     this._gl.uniform2f(this._location, v.x, v.y);

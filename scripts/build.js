@@ -485,6 +485,10 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
         glslFile.indexOf(path.normalize(path.join(baseDir, "Structs"))) === 0
       ) {
         builtinStructs.push(baseName);
+      }else if(
+        glslFile.indexOf(path.normalize(path.join(baseDir, "ATGlobe"))) === 0
+      ){
+        builtinATGlobe.push(baseName); // 【世纪空间 ATGlobe 】
       }
 
       delete leftOverJsFiles[jsFile];
@@ -555,6 +559,8 @@ export default "${contents}";\n`;
   generateBuiltinContents(contents, builtinConstants, "Constants");
   generateBuiltinContents(contents, builtinStructs, "Structs");
   generateBuiltinContents(contents, builtinFunctions, "Functions");
+  generateBuiltinContents(contents, builtinATGlobe, "ATGlobe");// 【世纪空间 ATGlobe 】
+
 
   const fileContents = `//This file is automatically rebuilt by the Cesium build process.\n${contents.imports.join(
     "\n"

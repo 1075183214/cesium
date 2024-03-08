@@ -5,6 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import PositionProperty from "./PositionProperty.js";
+import JulianDate from "../Core/JulianDate.js";  //【世纪空间 ATGlobe】容错性处理，可以.getValue()直接取值。
 
 /**
  * A {@link PositionProperty} whose value does not change in respect to the
@@ -112,7 +113,9 @@ ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required.");
+    // throw new DeveloperError("time is required.");
+    //【世纪空间 ATGlobe】容错性处理，可以.getValue()直接取值。
+    time = JulianDate.now();
   }
   if (!defined(referenceFrame)) {
     throw new DeveloperError("referenceFrame is required.");

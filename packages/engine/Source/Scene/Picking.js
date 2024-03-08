@@ -499,8 +499,16 @@ function drillPick(limit, pickCallback) {
     limit = Number.MAX_VALUE;
   }
 
+  //【世纪空间 ATGlobe】解决while死循环，页面卡死。
+  let whileCount = 0; //循环次数
   let pickedResult = pickCallback();
   while (defined(pickedResult)) {
+    //【世纪空间 ATGlobe】解决while死循环，页面卡死。
+    whileCount++;
+    if (whileCount > 100) { //限制最多循环次数，防止死循环
+      break;
+    }
+    //【世纪空间 ATGlobe】解决while死循环，页面卡死。
     const object = pickedResult.object;
     const position = pickedResult.position;
     const exclude = pickedResult.exclude;

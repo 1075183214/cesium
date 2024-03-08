@@ -1174,11 +1174,12 @@ function loadAsynchronous(primitive, frameState) {
       instanceIds.push(instances[i].id);
 
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(geometry._workerName)) {
-        throw new DeveloperError(
-          "_workerName must be defined for asynchronous geometry."
-        );
-      }
+      //【世纪空间 ATGlobe】兼容解决自定义geometry的_workerName为空的错误
+      // if (!defined(geometry._workerName)) {
+      //   throw new DeveloperError(
+      //     "_workerName must be defined for asynchronous geometry."
+      //   );
+      // }
       //>>includeEnd('debug');
 
       subTasks.push({

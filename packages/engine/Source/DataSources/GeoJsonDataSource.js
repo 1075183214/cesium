@@ -34,6 +34,8 @@ const crsNames = {
   "urn:ogc:def:crs:OGC:1.3:CRS84": defaultCrsFunction,
   "EPSG:4326": defaultCrsFunction,
   "urn:ogc:def:crs:EPSG::4326": defaultCrsFunction,
+  "EPSG:4490" : defaultCrsFunction,     //【世纪空间 ATGlobe】增加兼容4490坐标系
+  "urn:ogc:def:crs:EPSG::4490": defaultCrsFunction    //【世纪空间 ATGlobe】增加兼容4490坐标系
 };
 
 const crsLinkHrefs = {};
@@ -1011,7 +1013,8 @@ function load(that, geoJson, options, sourceUri, clear) {
     if (crs.type === "name") {
       crsFunction = crsNames[properties.name];
       if (!defined(crsFunction)) {
-        throw new RuntimeError(`Unknown crs name: ${properties.name}`);
+        // throw new RuntimeError(`Unknown crs name: ${properties.name}`);
+        crsFunction =  defaultCrsFunction;  //【世纪空间 ATGlobe】增加兼容4490坐标系
       }
     } else if (crs.type === "link") {
       let handler = crsLinkHrefs[properties.href];

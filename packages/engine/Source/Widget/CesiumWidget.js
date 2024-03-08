@@ -56,7 +56,7 @@ function startRenderLoop(widget) {
         widget._renderLoopRunning = false;
         if (widget._showRenderLoopErrors) {
           const title =
-            "An error occurred while rendering.  Rendering has stopped.";
+          'WebGL渲染时发生错误,渲染已经停止,请刷新页面。';  //【世纪空间 ATGlobe】 汉化
           widget.showErrorPanel(title, undefined, error);
         }
       }
@@ -394,14 +394,14 @@ function CesiumWidget(container, options) {
       that._renderLoopRunning = false;
       if (that._showRenderLoopErrors) {
         const title =
-          "An error occurred while rendering.  Rendering has stopped.";
+        'WebGL渲染时发生错误,渲染已经停止,请刷新页面。';  //【世纪空间 ATGlobe】 汉化
         that.showErrorPanel(title, undefined, error);
       }
     };
     scene.renderError.addEventListener(this._onRenderError);
   } catch (error) {
     if (showRenderLoopErrors) {
-      const title = "Error constructing CesiumWidget.";
+      const title = '构造CesiumWidget时出错';  //【世纪空间 ATGlobe】 汉化
       const message =
         'Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
       this.showErrorPanel(title, message, error);

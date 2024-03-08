@@ -176,7 +176,45 @@ function ImageryLayer(imageryProvider, options) {
     options.alpha,
     defaultValue(imageryProvider._defaultAlpha, 1.0)
   );
+  //【世纪空间 ATGlobe】 反色滤镜
+  /**
+   * The invertColor of this layer.
+   *
+   * @type {Bool}
+   * @default false
+   * @example
+   * // 使用反色滤镜
+   * const imageryLayer = viewer.imageryLayers.get(0);
+   * imageryLayer.invertColor = true;
+   * imageryLayer.filterRGB = [70.0, 112.0, 166.0];
+   * // 取消反色滤镜
+   * imageryLayer.invertColor = false;
+   * imageryLayer.filterRGB = [255.0, 255.0, 255.0];
+   */
+  this.invertColor = defaultValue(
+    options.invertColor,
+    defaultValue(imageryProvider.defaultInvertColor, false)
+  );
 
+  /**
+   * The filterRGB of this layer.
+   *
+   * @type {Array}
+   * @default [255.0, 255.0, 255.0]
+   * @example
+   * // 使用反色滤镜
+   * const imageryLayer = viewer.imageryLayers.get(0);
+   * imageryLayer.invertColor = true;
+   * imageryLayer.filterRGB = [70.0, 112.0, 166.0];
+   * // 取消反色滤镜
+   * imageryLayer.invertColor = false;
+   * imageryLayer.filterRGB = [255.0, 255.0, 255.0];
+   */
+  this.filterRGB = defaultValue(
+    options.filterRGB,
+    defaultValue(imageryProvider.defaultFilterRGB, [255.0, 255.0, 255.0])
+  );
+  //【世纪空间 ATGlobe】 反色滤镜
   /**
    * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
@@ -1131,6 +1169,27 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
     imagery.request = undefined;
 
     TileProviderError.reportSuccess(that._requestImageError);
+
+    //【世纪空间 ATGlobe】 2018-10-8 添加对外接口addImageryCache 方便外部处理
+    if (defined(imageryProvider.addImageryCache)) {
+      const maxlevel = that.getMaxLevel();
+      const opts = {
+        x: imagery.x, y: imagery.y, level: imagery.level, maxlevel: maxlevel, rectangle: {
+          xmin: Number(CesiumMath.toDegrees(imagery.rectangle.west).toFixed(6)),
+          xmax: Number(CesiumMath.toDegrees(imagery.rectangle.east).toFixed(6)),
+          ymin: Number(CesiumMath.toDegrees(imagery.rectangle.south).toFixed(6)),
+          ymax: Number(CesiumMath.toDegrees(imagery.rectangle.north).toFixed(6)),
+        },
+        // imagery:imagery
+      }
+      imageryProvider.addImageryCache(opts);
+    }
+    //【世纪空间 ATGlobe】 2018-10-8 添加对外接口addImageryCache 方便外部处理
+
+    //【世纪空间 ATGlobe】添加瓦片加载对外回调方法
+    if (that.onLoadTileEnd){
+      that.onLoadTileEnd(imagery);//请求完成
+    }
   }
 
   function failure(e) {
@@ -1159,6 +1218,10 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
     );
     if (that._requestImageError.retry) {
       doRequest();
+    }
+    //【世纪空间 ATGlobe】添加瓦片加载对外回调方法
+    if (that.onLoadTileError) {
+      that.onLoadTileError(imagery);//请求失败
     }
   }
 
@@ -1191,8 +1254,12 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
         imagery.level
       );
     }
+    //【世纪空间 ATGlobe】添加瓦片加载对外回调方法
+    if (that.onLoadTileStart) {
+      that.onLoadTileStart(imagery);//请求前
+    }
 
-    imagePromise
+    Promise.resolve(imagePromise)
       .then(function (image) {
         success(image);
       })
@@ -1479,10 +1546,47 @@ ImageryLayer.prototype.getImageryFromCache = function (
 };
 
 ImageryLayer.prototype.removeImageryFromCache = function (imagery) {
+  //【世纪空间 ATGlobe】 2018-10-8 添加对外接口removeImageryFromCache 方便外部处理
+  this.removeImageryCacheForATGlobe(imagery);
+
   const cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
   delete this._imageryCache[cacheKey];
 };
-
+//【世纪空间 ATGlobe】 2018-10-8 添加对外接口removeImageryFromCache 方便外部处理
+ImageryLayer.prototype.removeImageryCacheForATGlobe = function (imagery) {
+  const imageryProvider = this._imageryProvider;
+  if (defined(imageryProvider.removeImageryCache)) {
+    const maxlevel = this.getMaxLevel();
+    const opts = {
+      x: imagery.x,
+      y: imagery.y,
+      level: imagery.level,
+      maxLevel: maxlevel,
+      rectangle: {
+        xmin: Number(CesiumMath.toDegrees(imagery.rectangle.west).toFixed(6)),
+        xmax: Number(CesiumMath.toDegrees(imagery.rectangle.east).toFixed(6)),
+        ymin: Number(CesiumMath.toDegrees(imagery.rectangle.south).toFixed(6)),
+        ymax: Number(CesiumMath.toDegrees(imagery.rectangle.north).toFixed(6)),
+      },
+      // imagery:imagery
+    }
+    imageryProvider.removeImageryCache(opts);
+  }
+};
+//【世纪空间 ATGlobe】 2018-10-8 添加获取最大层级的方法
+ImageryLayer.prototype.getMaxLevel = function () {
+  let maxLevel = 0;
+  for (const i in this._imageryCache) {
+    if(this._imageryCache.hasOwnProperty(i)){
+      const imagery = this._imageryCache[i];
+      if (imagery.level > maxLevel){
+        maxLevel = imagery.level;
+      }
+    }
+    
+  }
+  return maxLevel;
+}
 function getImageryCacheKey(x, y, level) {
   return JSON.stringify([x, y, level]);
 }

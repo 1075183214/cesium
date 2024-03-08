@@ -330,6 +330,18 @@ function Cesium3DTileset(options) {
   this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
   this._clippingPlanesOriginMatrixDirty = true;
 
+  //【世纪空间 ATGlobe】 倾斜模型编辑修改
+  this.atglobeEditor = defaultValue(options.atglobeEditor, {
+    'IsYaPing': [false, false, false, false],//[是否开启编辑，是否开启压平，是否开启裁剪，是否开启淹没]
+    'editVar':[false, false, false, false],//[是否开启裁剪外部，是否开启淹没全局，]
+    'floodVar': [0, 0, 0, 0],//[基础淹没高度，当前淹没高度，最大淹没高度,默认高度差(最大淹没高度 - 基础淹没高度)]
+    'floodColor': [0.0, 0.0, 0.0, 0.5],//[淹没颜色的r(0-1之间)，淹没颜色的g，淹没颜色的b，淹没混合系数（建议取值范围0.3-0.7）]
+    'heightVar':[0,0], //基础压平高度，调整压平高度值
+    'enable':  defaultValue(options.hasEditor,true)
+  });
+  this.atglobeJzwStyle = defaultValue(options.atglobeJzwStyle,false)
+  //【世纪空间 ATGlobe】 建筑物特效
+
   this._vectorClassificationOnly = defaultValue(
     options.vectorClassificationOnly,
     false

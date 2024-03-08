@@ -179,11 +179,49 @@ function GlobeSurfaceTileProvider(options) {
   this._hasLoadedTilesThisFrame = false;
   this._hasFillTilesThisFrame = false;
 
+  //【世纪空间 ATGlobe】 地形挖掘与淹没
+  this._floodAnalysis = {
+    floodVar: [0, 0, 0, 500],//[基础淹没高度，当前淹没高度，最大淹没高度,默认高度差(最大淹没高度 - 基础淹没高度)]
+    ym_pos_x: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ym_pos_y: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ym_pos_z: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    rect_flood: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//包围盒[minx,miny,minz,maxx,maxy,maxz,0.0,0.0,0.0]
+    floodSpeed: 1,//淹没速度
+    ym_max_index: 0,//点选点的个数
+    globe: true,//是否全球淹没
+    showElseArea: true//是否显示非淹没区域
+  };
+  this._excavateAnalysis =  {
+    splitNum: 30,//分割点数
+    showSelfOnly: false,//是否开启仅展示自己
+    dig_pos_x: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//向地形挖掘着色器里传数值，通过矩阵的方式，最大传16个点
+    dig_pos_y: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//向地形挖掘着色器里传数值，通过矩阵的方式，最大传16个点
+    dig_pos_z: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//向地形挖掘着色器里传数值，通过矩阵的方式，最大传16个点
+    rect_dig: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//挖掘外包边界
+    dig_max_index: 0,//挖掘点的个数
+    excavateHeight: 0,//挖掘深度
+    excavateMinHeight: 9999,
+    excavatePerPoint: false//是否按每个点进行计算高度，功能尚未添加，用来模拟岩层的参差不齐
+  };
+  //【世纪空间 ATGlobe】 地形挖掘与淹没
+
   this._oldVerticalExaggeration = undefined;
   this._oldVerticalExaggerationRelativeHeight = undefined;
 }
 
 Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
+  //【世纪空间 ATGlobe】 地形挖掘与淹没
+  floodAnalysis : {
+    get : function() {
+      return this._floodAnalysis;
+    }
+  },
+  excavateAnalysis : {
+    get : function() {
+      return this._excavateAnalysis;
+    }
+  },
+  //【世纪空间 ATGlobe】 地形挖掘与淹没
   /**
    * Gets or sets the color of the globe when no imagery is available.
    * @memberof GlobeSurfaceTileProvider.prototype
@@ -1582,10 +1620,86 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
   }
 };
 
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+GlobeSurfaceTileProvider.prototype.resetFloodAnalysis = function() {
+  this._floodAnalysis ={
+    floodVar: [0, 0, 0, 500],//[基础淹没高度，当前淹没高度，最大淹没高度,默认高度差(最大淹没高度 - 基础淹没高度)]
+    ym_pos_x: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ym_pos_y: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ym_pos_z: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    rect_flood: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//包围盒[minx,miny,minz,maxx,maxy,maxz,0.0,0.0,0.0]
+    floodSpeed: 1,//淹没速度
+    ym_max_index: 0,//点选点的个数
+    globe: true,//是否全球淹没
+    showElseArea: true//是否显示非淹没区域
+  };
+};
+GlobeSurfaceTileProvider.prototype.resetExcavateAnalysis = function() {
+  this._excavateAnalysis ={
+    splitNum: 30,//每两点之间插值个数
+    showSelfOnly: false,//是否只显示自己
+    dig_pos_x: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    dig_pos_y: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    dig_pos_z: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    rect_dig: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],//包围盒[minx,miny,minz,maxx,maxy,maxz,0.0,0.0,0.0]
+    dig_max_index: 0,//点选点的个数
+    excavateHeight: 0,//挖掘深度
+    excavateMinHeight: 9999,//最低挖掘海拔值
+    excavatePerPoint: false//是否按插值点挖掘
+  };
+};
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+
 const scratchClippingPlanesMatrix = new Matrix4();
 const scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   const uniformMap = {
+    //【世纪空间 ATGlobe】 地形挖掘与淹没
+    floodVar: function() {
+      const arr = globeSurfaceTileProvider._floodAnalysis.floodVar;
+      // eslint-disable-next-line no-undef
+      return new Cartesian4_default(arr[0], arr[1], arr[2], arr[3]);
+    },
+    ym_pos_x: function() {
+      return globeSurfaceTileProvider._floodAnalysis.ym_pos_x;
+    },
+    ym_pos_y: function() {
+      return globeSurfaceTileProvider._floodAnalysis.ym_pos_y;
+    },
+    ym_pos_z: function() {
+      return globeSurfaceTileProvider._floodAnalysis.ym_pos_z;
+    },
+    rect_flood: function() {
+      return globeSurfaceTileProvider._floodAnalysis.rect_flood;
+    },
+    ym_max_index: function() {
+      return globeSurfaceTileProvider._floodAnalysis.ym_max_index;
+    },
+    globe: function() {
+      return globeSurfaceTileProvider._floodAnalysis.globe;
+    },
+    showElseArea: function() {
+      return globeSurfaceTileProvider._floodAnalysis.showElseArea;
+    },
+    showSelfOnly: function() {
+      return globeSurfaceTileProvider._excavateAnalysis.showSelfOnly;
+    },
+    dig_pos_x: function() {
+      return globeSurfaceTileProvider._excavateAnalysis.dig_pos_x;
+    },
+    dig_pos_y: function() {
+      return globeSurfaceTileProvider._excavateAnalysis.dig_pos_y;
+    },
+    dig_pos_z: function() {
+      return globeSurfaceTileProvider._excavateAnalysis.dig_pos_z;
+    },
+    rect_dig: function() {
+      return globeSurfaceTileProvider._excavateAnalysis.rect_dig;
+    },
+    dig_max_index: function() {
+      return globeSurfaceTileProvider._excavateAnalysis.dig_max_index;
+    },
+    //【世纪空间 ATGlobe】 地形挖掘与淹没
     u_initialColor: function () {
       return this.properties.initialColor;
     },
@@ -1676,6 +1790,14 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_dayTextureAlpha: function () {
       return this.properties.dayTextureAlpha;
     },
+    //【世纪空间 ATGlobe】 反色滤镜
+    u_dayTextureInvertColor: function () {
+      return this.properties.dayTextureInvertColor;
+    },
+    u_dayTextureFilterRGB: function () {
+      return this.properties.dayTextureFilterRGB;
+    },
+    //【世纪空间 ATGlobe】 反色滤镜
     u_dayTextureNightAlpha: function () {
       return this.properties.dayTextureNightAlpha;
     },
@@ -1815,6 +1937,10 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       dayTextureTexCoordsRectangle: [],
       dayTextureUseWebMercatorT: [],
       dayTextureAlpha: [],
+      //【世纪空间 ATGlobe】 反色滤镜
+      dayTextureInvertColor: [],
+      dayTextureFilterRGB: [],
+      //【世纪空间 ATGlobe】 反色滤镜
       dayTextureNightAlpha: [],
       dayTextureDayAlpha: [],
       dayTextureBrightness: [],
@@ -2515,6 +2641,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     let applySaturation = false;
     let applyGamma = false;
     let applyAlpha = false;
+    //【世纪空间 ATGlobe】 反色滤镜
+    let applyInvertColor = false;
+    let applyfilterRGB = false;
+    //【世纪空间 ATGlobe】 反色滤镜
     let applyDayNightAlpha = false;
     let applySplit = false;
     let applyCutout = false;
@@ -2571,6 +2701,19 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       applyAlpha =
         applyAlpha ||
         uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;
+
+      //【世纪空间 ATGlobe】 反色滤镜
+      uniformMapProperties.dayTextureInvertColor[numberOfDayTextures] = imageryLayer.invertColor;
+      applyInvertColor = 
+        applyInvertColor ||
+        uniformMapProperties.dayTextureInvertColor[numberOfDayTextures] !== false;
+      
+      uniformMapProperties.dayTextureFilterRGB[numberOfDayTextures] = 
+        new Cartesian3(imageryLayer.filterRGB[0],imageryLayer.filterRGB[1],imageryLayer.filterRGB[2]);
+      applyfilterRGB = 
+        applyfilterRGB ||
+        imageryLayer.filterRGB !=[255.0, 255.0, 255.0];
+      //【世纪空间 ATGlobe】 反色滤镜
 
       uniformMapProperties.dayTextureNightAlpha[numberOfDayTextures] =
         imageryLayer.nightAlpha;
@@ -2731,6 +2874,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.applySaturation = applySaturation;
     surfaceShaderSetOptions.applyGamma = applyGamma;
     surfaceShaderSetOptions.applyAlpha = applyAlpha;
+    //【世纪空间 ATGlobe】 反色滤镜
+    surfaceShaderSetOptions.applyInvertColor = applyInvertColor;
+    surfaceShaderSetOptions.applyfilterRGB = applyfilterRGB;
+    //【世纪空间 ATGlobe】 反色滤镜
     surfaceShaderSetOptions.applyDayNightAlpha = applyDayNightAlpha;
     surfaceShaderSetOptions.applySplit = applySplit;
     surfaceShaderSetOptions.enableFog = applyFog;

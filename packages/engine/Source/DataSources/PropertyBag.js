@@ -5,6 +5,7 @@ import Event from "../Core/Event.js";
 import ConstantProperty from "./ConstantProperty.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
+import JulianDate from "../Core/JulianDate.js";
 
 /**
  * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.
@@ -169,7 +170,8 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
 PropertyBag.prototype.getValue = function (time, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required.");
+    // throw new DeveloperError("time is required.");
+    time = new JulianDate();
   }
   //>>includeEnd('debug');
 

@@ -5,7 +5,20 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  * @private
  */
 function ShadowMapShader() {}
-
+//【世纪空间 ATGlobe】可视域分析 相机位置很远则是太阳，否则是自己的shadowmap
+function isSun(position) {
+  if (Math.abs(position.x) > 7471000) {
+    return true;
+  }
+  if (Math.abs(position.y) > 7471000) {
+    return true;
+  }
+  if (Math.abs(position.z) > 7471000) {
+    return true;
+  }
+  return false;
+}
+//【世纪空间 ATGlobe】可视域分析 相机位置很远则是太阳，否则是自己的shadowmap
 ShadowMapShader.getShadowCastShaderKeyword = function (
   isPointLight,
   isTerrain,
@@ -383,8 +396,18 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
       "    float visibility = czm_shadowVisibility(shadowMap_texture, shadowParameters); \n";
   }
 
-  fsSource += "    out_FragColor.rgb *= visibility; \n" + "} \n";
+  //【世纪空间 ATGlobe】可视域分析 默认的太阳
+  // fsSource += "    out_FragColor.rgb *= visibility; \n" + "} \n";
 
+  if (isSun(shadowMap._lightCamera.position)) { 
+    fsSource += "    out_FragColor.rgb *= visibility; \n" + "} \n";
+
+  } else { 
+    fsSource +=
+      '    out_FragColor.rgb = out_FragColor.rgb; \n' +
+      '} \n';
+  }
+  //【世纪空间 ATGlobe】可视域分析 自己加的可视域shadowmap
   sources.push(fsSource);
 
   return new ShaderSource({

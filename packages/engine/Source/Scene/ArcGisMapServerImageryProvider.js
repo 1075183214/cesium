@@ -136,6 +136,8 @@ function metadataSuccess(data, imageryProviderBuilder) {
     imageryProviderBuilder.tileWidth = tileInfo.rows;
     imageryProviderBuilder.tileHeight = tileInfo.cols;
 
+    //【世纪空间 ATGlobe】记录wkid
+    imageryProviderBuilder._wkid = tileInfo.spatialReference.wkid;
     if (
       tileInfo.spatialReference.wkid === 102100 ||
       tileInfo.spatialReference.wkid === 102113
@@ -143,7 +145,7 @@ function metadataSuccess(data, imageryProviderBuilder) {
       imageryProviderBuilder.tilingScheme = new WebMercatorTilingScheme({
         ellipsoid: imageryProviderBuilder.ellipsoid,
       });
-    } else if (data.tileInfo.spatialReference.wkid === 4326) {
+    } else if (data.tileInfo.spatialReference.wkid === 4326 || data.tileInfo.spatialReference.wkid === 4490) {
       imageryProviderBuilder.tilingScheme = new GeographicTilingScheme({
         ellipsoid: imageryProviderBuilder.ellipsoid,
       });
@@ -152,6 +154,11 @@ function metadataSuccess(data, imageryProviderBuilder) {
       throw new RuntimeError(message);
     }
     imageryProviderBuilder.maximumLevel = data.tileInfo.lods.length - 1;
+
+    if (!imageryProviderBuilder._maximumLevel) {
+      //【世纪空间 ATGlobe】外部没有设置时才去读取服务中的配置。
+      imageryProviderBuilder._maximumLevel = data.tileInfo.lods.length - 1;
+    }
 
     if (defined(data.fullExtent)) {
       if (
@@ -200,7 +207,7 @@ function metadataSuccess(data, imageryProviderBuilder) {
             ne.longitude,
             ne.latitude
           );
-        } else if (data.fullExtent.spatialReference.wkid === 4326) {
+        } else if (data.fullExtent.spatialReference.wkid === 4326 || data.fullExtent.spatialReference.wkid === 4490) {//【世纪空间 ATGlobe】添加对4490的支持
           imageryProviderBuilder.rectangle = Rectangle.fromDegrees(
             data.fullExtent.xmin,
             data.fullExtent.ymin,
@@ -219,7 +226,67 @@ function metadataSuccess(data, imageryProviderBuilder) {
 
     imageryProviderBuilder.useTiles = true;
   }
-
+  //【世纪空间 ATGlobe】_rectangle取默认fullExtent边界
+  const _extent = data.fullExtent || data.initialExtent;
+  if (
+    defined(_extent) &&
+    defined(_extent.spatialReference) &&
+    defined(_extent.spatialReference.wkid)
+  ) {
+    if (
+      _extent.spatialReference.wkid === 102100 ||
+      _extent.spatialReference.wkid === 102113
+    ) {
+      const projection = new WebMercatorProjection();
+      const sw = projection.unproject(
+        new Cartesian3(
+          Math.max(
+            _extent.xmin,
+            -imageryProviderBuilder._tilingScheme.ellipsoid.maximumRadius *
+              Math.PI
+          ),
+          Math.max(
+            _extent.ymin,
+            -imageryProviderBuilder._tilingScheme.ellipsoid.maximumRadius *
+              Math.PI
+          ),
+          0.0
+        )
+      );
+      const ne = projection.unproject(
+        new Cartesian3(
+          Math.min(
+            _extent.xmax,
+            imageryProviderBuilder._tilingScheme.ellipsoid.maximumRadius *
+              Math.PI
+          ),
+          Math.min(
+            _extent.ymax,
+            imageryProviderBuilder._tilingScheme.ellipsoid.maximumRadius *
+              Math.PI
+          ),
+          0.0
+        )
+      );
+      imageryProviderBuilder._rectangle = new Rectangle(
+        sw.longitude,
+        sw.latitude,
+        ne.longitude,
+        ne.latitude
+      );
+    } else if (
+      _extent.spatialReference.wkid === 4326 ||
+      _extent.spatialReference.wkid === 4490
+    ) {
+      imageryProviderBuilder._rectangle = Rectangle.fromDegrees(
+        _extent.xmin,
+        _extent.ymin,
+        _extent.xmax,
+        _extent.ymax
+      );
+    }
+  }
+  //【世纪空间 ATGlobe】_rectangle取默认fullExtent边界
   if (defined(data.copyrightText) && data.copyrightText.length > 0) {
     if (defined(imageryProviderBuilder.credit)) {
       imageryProviderBuilder.tileCredits = [new Credit(data.copyrightText)];
@@ -303,6 +370,23 @@ function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._defaultAlpha = undefined;
+    //【世纪空间 ATGlobe】 反色滤镜
+  /**
+   * The default invertColor of this provider.
+   *
+   * @type {Bool|undefined}
+   * @default undefined
+   */
+  this._defaultInvertColor = undefined;
+
+  /**
+   * The default filterRGB of this provider.
+   *
+   * @type {Array|undefined}
+   * @default undefined
+   */
+  this._defaultFilterRGB = undefined;
+  //【世纪空间 ATGlobe】 反色滤镜
   this._defaultNightAlpha = undefined;
   this._defaultDayAlpha = undefined;
   this._defaultBrightness = undefined;
@@ -327,6 +411,13 @@ function ArcGisMapServerImageryProvider(options) {
     this._tilingScheme.rectangle
   );
   this._layers = options.layers;
+
+  //【世纪空间 ATGlobe】扩展
+  this._layerDefs = options.layerDefs; //增加查询条件
+  this._maxTileLevel = options.maxTileLevel; //增加最大瓦片层级设置
+  this._wkid = options.wkid;
+  //【世纪空间 ATGlobe】扩展
+
   this._credit = options.credit;
   this._tileCredits = undefined;
 
@@ -458,7 +549,12 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
 
 function buildImageResource(imageryProvider, x, y, level, request) {
   let resource;
-  if (imageryProvider._useTiles) {
+  let _useTiles = imageryProvider._useTiles;
+  if (_useTiles && defined(imageryProvider._maxTileLevel)) {
+    _useTiles = level < imageryProvider._maxTileLevel;
+  }
+
+  if (_useTiles) {
     resource = imageryProvider._resource.getDerivedResource({
       url: `tile/${level}/${y}/${x}`,
       request: request,
@@ -482,14 +578,18 @@ function buildImageResource(imageryProvider, x, y, level, request) {
     if (
       imageryProvider._tilingScheme.projection instanceof GeographicProjection
     ) {
-      query.bboxSR = 4326;
-      query.imageSR = 4326;
+      query.bboxSR = imageryProvider._wkid || 4326; //【世纪空间 ATGlobe】支持传对应的wkid，以便支持4490
+      query.imageSR = imageryProvider._wkid || 4326; //【世纪空间 ATGlobe】支持传对应的wkid，以便支持4490
     } else {
       query.bboxSR = 3857;
       query.imageSR = 3857;
     }
     if (imageryProvider.layers) {
       query.layers = `show:${imageryProvider.layers}`;
+    }
+    //【世纪空间 ATGlobe】扩展，增加查询条件
+    if (imageryProvider.layerDefs) {
+      query.layerDefs = imageryProvider.layerDefs;
     }
 
     resource = imageryProvider._resource.getDerivedResource({
@@ -695,6 +795,12 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
       return this._layers;
     },
   },
+  //【世纪空间 ATGlobe】扩展，增加查询条件
+  layerDefs: {
+    get: function() {
+      return this._layerDefs;
+    }
+  }
 });
 
 /**
@@ -838,6 +944,11 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
     layers: layers,
   };
 
+  //【世纪空间 ATGlobe】扩展，增加查询条件
+  if (defined(this._layerDefs)) {
+    query.layerDefs = this._layerDefs;
+  }
+
   const resource = this._resource.getDerivedResource({
     url: "identify",
     queryParameters: query,
@@ -867,7 +978,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
           feature.geometry.spatialReference.wkid
             ? feature.geometry.spatialReference.wkid
             : 4326;
-        if (wkid === 4326 || wkid === 4283) {
+        if (wkid === 4326 || wkid === 4283 || wkid === 4490) {//【世纪空间 ATGlobe】添加对4490的支持
           featureInfo.position = Cartographic.fromDegrees(
             feature.geometry.x,
             feature.geometry.y,

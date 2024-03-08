@@ -80,6 +80,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const applySaturation = options.applySaturation;
   const applyGamma = options.applyGamma;
   const applyAlpha = options.applyAlpha;
+  //【世纪空间 ATGlobe】 反色滤镜
+  const applyInvertColor = options.applyInvertColor;
+  const applyfilterRGB = options.applyfilterRGB;
+  //【世纪空间 ATGlobe】 反色滤镜
   const applyDayNightAlpha = options.applyDayNightAlpha;
   const applySplit = options.applySplit;
   const showReflectiveOcean = options.showReflectiveOcean;
@@ -227,6 +231,14 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     if (applyAlpha) {
       fs.defines.push("APPLY_ALPHA");
     }
+    //【世纪空间 ATGlobe】 反色滤镜
+    if (applyInvertColor) {
+      fs.defines.push('APPLY_INVERT_COLOR');
+    }
+    if (applyfilterRGB) {
+      fs.defines.push("APPLY_FILTER_RGB");
+    }
+    //【世纪空间 ATGlobe】 反色滤镜
     if (applyDayNightAlpha) {
       fs.defines.push("APPLY_DAY_NIGHT_ALPHA");
     }
@@ -338,6 +350,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
             u_dayTextureTexCoordsRectangle[${i}],\n\
             u_dayTextureTranslationAndScale[${i}],\n\
             ${applyAlpha ? `u_dayTextureAlpha[${i}]` : "1.0"},\n\
+            //【世纪空间 ATGlobe】 反色滤镜
+            ${applyInvertColor ? `u_dayTextureInvertColor[${i}]` : "false"},\n\
+            ${applyfilterRGB ? `u_dayTextureFilterRGB[${i}]` : "vec3(0.0)"},\n\
+            //【世纪空间 ATGlobe】 反色滤镜
             ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n${
         applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
       },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\

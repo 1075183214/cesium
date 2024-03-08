@@ -176,6 +176,9 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    */
   pickId: {
     get: function () {
+      if (!this._content.batchTable) {
+        return '';  //【世纪空间 ATGlobe】 容错处理
+      }
       return this._content.batchTable.getPickColor(this._batchId);
     },
   },

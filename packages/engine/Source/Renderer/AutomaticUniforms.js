@@ -46,6 +46,15 @@ AutomaticUniform.prototype.getDeclaration = function (name) {
  * @private
  */
 const AutomaticUniforms = {
+  //【世纪空间 ATGlobe】 倾斜模型编辑 ，添加为着色器里yp_black_texture变量的赋值
+  yp_black_texture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState._yp_black_texture;
+    }
+  }),
+  //【世纪空间 ATGlobe】 倾斜模型编辑
   /**
    * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
    * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,

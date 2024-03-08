@@ -1,5 +1,16 @@
 uniform vec4 u_initialColor;
 
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+#ifdef WAJUE
+uniform mat4 dig_pos_x;
+uniform mat4 dig_pos_y;
+uniform mat4 dig_pos_z;
+uniform mat3 rect_dig;
+uniform int dig_max_index;
+uniform bool showSelfOnly;
+#endif
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
@@ -8,6 +19,15 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 #ifdef APPLY_ALPHA
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 #endif
+
+//【世纪空间 ATGlobe】 反色滤镜
+#ifdef APPLY_INVERT_COLOR
+uniform bool u_dayTextureInvertColor[TEXTURE_UNITS];
+#endif
+#ifdef APPLY_FILTER_RGB
+uniform vec3 u_dayTextureFilterRGB[TEXTURE_UNITS];
+#endif
+//【世纪空间 ATGlobe】 反色滤镜
 
 #ifdef APPLY_DAY_NIGHT_ALPHA
 uniform float u_dayTextureNightAlpha[TEXTURE_UNITS];
@@ -112,6 +132,17 @@ in vec3 v_normalMC;
 in vec3 v_normalEC;
 
 #ifdef APPLY_MATERIAL
+
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+uniform mat4 ym_pos_x;
+uniform mat4 ym_pos_y;
+uniform mat4 ym_pos_z;
+uniform mat3 rect_flood;
+uniform int ym_max_index;
+uniform bool globe;
+uniform bool showElseArea;
+//【世纪空间 ATGlobe】 地形挖掘与淹没
+
 in float v_height;
 in float v_slope;
 in float v_aspect;
@@ -164,6 +195,10 @@ vec4 sampleAndBlend(
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
     float textureAlpha,
+    //【世纪空间 ATGlobe】 反色滤镜
+    bool textureInvertColor,
+    vec3 textureFilterRGB,
+    //【世纪空间 ATGlobe】 反色滤镜
     float textureNightAlpha,
     float textureDayAlpha,
     float textureBrightness,
@@ -204,6 +239,21 @@ vec4 sampleAndBlend(
     colorDiff.r = max(max(colorDiff.r, colorDiff.g), colorDiff.b);
     alpha = czm_branchFreeTernary(colorDiff.r < colorToAlpha.a, 0.0, alpha);
 #endif
+
+//【世纪空间 ATGlobe】 反色滤镜
+#ifdef APPLY_INVERT_COLOR
+if (textureInvertColor) {
+color.r = 1.0 - color.r;
+color.g = 1.0 - color.g;
+color.b = 1.0 - color.b;
+}
+#endif
+#ifdef APPLY_FILTER_RGB
+color.r = color.r * textureFilterRGB.x/255.0;
+color.g = color.g * textureFilterRGB.y/255.0;
+color.b = color.b * textureFilterRGB.z/255.0;
+#endif
+//【世纪空间 ATGlobe】 反色滤镜
 
 #if !defined(APPLY_GAMMA)
     vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
@@ -401,8 +451,24 @@ void main()
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
-    vec4 materialColor = vec4(material.diffuse, material.alpha);
-    color = alphaBlend(materialColor, color);
+    // vec4 materialColor = vec4(material.diffuse, material.alpha);
+    // color = alphaBlend(materialColor, color);
+        //【世纪空间 ATGlobe】 地形淹没
+    //czm_isInEllipsoid是自己写的判断顶点是否在区域的内置函数
+    bool stc_isIn = czm_isInEllipsoid (v_positionMC,ym_pos_x,ym_pos_y,ym_pos_z,rect_flood,ym_max_index);
+    if(globe){
+        vec4 materialColor = vec4(material.diffuse, material.alpha);
+        color = alphaBlend(materialColor, color);
+    }else{
+        if(stc_isIn){
+            color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+        }else{
+            if(!showElseArea){
+                color.xyz = vec3(0.82,0.82,0.82);
+            }
+        }
+    }
+    //【世纪空间 ATGlobe】 地形淹没
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
@@ -520,7 +586,23 @@ void main()
             #else
                 finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
             #endif
-            
+
+            //【世纪空间 ATGlobe】 地形挖掘
+            //czm_isInEllipsoid是自己写的判断顶点是否在区域的内置函数
+            #ifdef WAJUE
+                bool dig_isIn = czm_isInEllipsoid(v_positionMC,dig_pos_x,dig_pos_y,dig_pos_z,rect_dig,dig_max_index);
+                if(dig_isIn){
+                    if(!showSelfOnly){
+                        discard;
+                    }
+                }else{
+                    if(showSelfOnly){
+                        discard;
+                    }
+                }
+            #endif
+            //【世纪空间 ATGlobe】 地形挖掘
+
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
         #endif
     }
@@ -546,6 +628,10 @@ void main()
 #endif
     
     out_FragColor =  finalColor;
+    
+#ifdef  APPLY_EXCAVATE
+    out_FragColor = vec4(1.0);  //【世纪空间 ATGlobe】 地形挖掘
+#endif
 }
 
 
