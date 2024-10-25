@@ -1174,16 +1174,19 @@ function loadAsynchronous(primitive, frameState) {
       instanceIds.push(instances[i].id);
 
       //>>includeStart('debug', pragmas.debug);
-      //【世纪空间 ATGlobe】兼容解决自定义geometry的_workerName为空的错误
-      // if (!defined(geometry._workerName)) {
-      //   throw new DeveloperError(
-      //     "_workerName must be defined for asynchronous geometry."
-      //   );
-      // }
+      if (
+        (defined(geometry._workerName) && defined(geometry._workerPath)) ||
+        (!defined(geometry._workerName) && !defined(geometry._workerPath))
+      ) {
+        throw new DeveloperError(
+          "Must define either _workerName or _workerPath for asynchronous geometry."
+        );
+      }
       //>>includeEnd('debug');
 
       subTasks.push({
         moduleName: geometry._workerName,
+        modulePath: geometry._workerPath,
         geometry: geometry,
       });
     }
@@ -2512,9 +2515,6 @@ function setReady(primitive, frameState, state, error) {
     primitive._ready =
       primitive._state === PrimitiveState.COMPLETE ||
       primitive._state === PrimitiveState.FAILED;
-    if (!defined(error)) {
-      return true;
-    }
   });
 }
 export default Primitive;

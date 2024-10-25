@@ -9,10 +9,12 @@ import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import buildDrawCommand from "./buildDrawCommand.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
+import AtmospherePipelineStage from "./AtmospherePipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
+import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
 import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
@@ -606,6 +608,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   modelPipelineStages.length = 0;
 
   const model = this._model;
+  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
 
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
@@ -624,6 +627,10 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelClippingPlanesPipelineStage);
   }
 
+  if (model.isClippingPolygonsEnabled()) {
+    modelPipelineStages.push(ModelClippingPolygonsPipelineStage);
+  }
+
   if (model.hasSilhouette(frameState)) {
     modelPipelineStages.push(ModelSilhouettePipelineStage);
   }
@@ -637,6 +644,10 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
   if (ModelType.is3DTiles(model.type)) {
     modelPipelineStages.push(TilesetPipelineStage);
+  }
+
+  if (fogRenderable) {
+    modelPipelineStages.push(AtmospherePipelineStage);
   }
 };
 

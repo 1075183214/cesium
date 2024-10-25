@@ -1,7 +1,4 @@
-/*eslint-env node*/
 "use strict";
-
-// NodeJS smoke screen test
 
 const assert = require("node:assert");
 const {
@@ -9,6 +6,8 @@ const {
   createWorldTerrainAsync,
   sampleTerrain,
 } = require("cesium");
+
+// NodeJS smoke screen test
 
 async function test() {
   const provider = await createWorldTerrainAsync();

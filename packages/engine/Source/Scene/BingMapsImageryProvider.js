@@ -517,6 +517,10 @@ BingMapsImageryProvider.fromUrl = async function (url, options) {
     queryParameters.mapLayer = options.mapLayer;
   }
 
+  if (defined(options.culture)) {
+    queryParameters.culture = options.culture;
+  }
+
   const metadataResource = resource.getDerivedResource({
     url: `REST/v1/Imagery/Metadata/${mapStyle}`,
     queryParameters: queryParameters,

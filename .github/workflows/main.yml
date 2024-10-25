@@ -1,7 +1,7 @@
 name: main
 on: 
   workflow_run:
-    workflows: [dev]
+    workflows: [dev, prod]
     types: [completed]
     branches: 
       - main
@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: message result in slack
         id: slack
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v1.26.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:

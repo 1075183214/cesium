@@ -1,5 +1,153 @@
 # Change Log
 
+### 1.118 - 2024-06-03
+
+#### @cesium/engine
+
+###### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
+- Added support for glTF models with the [KHR_materials_anisotropy extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md). [#11988](https://github.com/CesiumGS/cesium/pull/11988)
+- Added support for glTF models with the [KHR_materials_clearcoat extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md). [#12006](https://github.com/CesiumGS/cesium/pull/12006)
+
+#### Fixes :wrench:
+
+- Fixed a bug where `scene.pickPosition` returned incorrect results against the globe when `depthTestAgainstTerrain` is `false`. [#4368](https://github.com/CesiumGS/cesium/issues/4368)
+- Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Fixed an error in the specular reflection calculations for image-based lighting from supplied environment maps. [#12008](https://github.com/CesiumGS/cesium/issues/12008)
+- Fixed a normalization error in image-based lighting. [#11994](https://github.com/CesiumGS/cesium/issues/11994)
+- Fixes a bug where `sampleTerrain` did not respect the `rejectOnTileFail` flag for failed requests other than the first. [#11998](https://github.com/CesiumGS/cesium/pull/11998)
+- Corrected the Typescript types for `Billboard.id` and `Label.id` to be `any` [#11973](https://github.com/CesiumGS/cesium/issues/11973)
+
+### 1.117 - 2024-05-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+- Added `Cesium3DTileset.clippingPolygons`, `Globe.clippingPolygons`, and `Model.clippingPolygons` properties for defining clipping regions from world positions. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+
+##### Fixes :wrench:
+
+- Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
+- Fixes Typescript definition for `Event.raiseEvent`. [#10498](https://github.com/CesiumGS/cesium/issues/10498)
+- Fixed a bug that Label position height may not be correctly updated when its HeightReference is relative. [#11929](https://github.com/CesiumGS/cesium/pull/11929)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed leaked CSS styling from `I3SBuildingSceneLayerExplorer` widget. [#11959](https://github.com/CesiumGS/cesium/pull/11959)
+
+### 1.116 - 2024-04-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- `Cesium3DTileset.disableCollision` has been removed. Use `Cesium3DTileset.enableCollision` instead.
+- `Globe.terrainExaggeration` and `Globe.terrainExaggerationRelativeHeight` have been removed. Use `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight` instead.
+
+##### Additions :tada:
+
+- Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+- Implemented sharper rendering and lighting on voxels with CYLINDER and ELLIPSOID shape. [#11875](https://github.com/CesiumGS/cesium/pull/11875)
+- Implemented vertical exaggeration for voxels with BOX shape. [#11887](https://github.com/CesiumGS/cesium/pull/11887)
+- Added the `Check` object of validators to the public api and types. [#11901](https://github.com/CesiumGS/cesium/pull/11901)
+
+##### Fixes :wrench:
+
+- Fixed issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
+- Fixed a bug with performance in scenes with multiple tilesets [#11878](https://github.com/CesiumGS/cesium/pull/11878)
+- Fixes issue with PolygonGeometry uvs are improperly computed [#11767](https://github.com/CesiumGS/cesium/issues/11767)
+- Fixed voxel rendering bugs for non-spherical ellipsoid shapes [#11848](https://github.com/CesiumGS/cesium/pull/11848)
+- Fixed a bug where dynamic geometries caused the Scene to continuously render when running in requestRenderMode [#6631](https://github.com/CesiumGS/cesium/issues/6631)
+
+### 1.115 - 2024-03-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- By default, instances of `Cesium3DTileset ` will no longer default to enable collisions for camera collision or for clamping entities. [#11829](https://github.com/CesiumGS/cesium/pull/11829)
+  - This behavior can be enabled by setting `Cesium3DTileset.enableCollision` to true.
+
+##### Additions :tada:
+
+- Added support for I3S Building Scene Layer. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
+- Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
+- Added `Scene.defaultLogDepthBuffer` to allow changing the default behavior of the `logDepthBuffer` for newly created `Scene` instances. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
+- Added `SensorVolumePortionToDisplay` to assist `CzmlDataSource` in parsing CZML. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
+
+##### Fixes :wrench:
+
+- Fixed a bug where the camera can stay underground when 3D Tiles are loading in. [#11824](https://github.com/CesiumGS/cesium/issues/11824)
+- Fixed a bug with where a mix of empty and non-empty tiles were not refining. [#9356](https://github.com/CesiumGS/cesium/issues/9356)
+- Fixed a bug with camera collision with tilesets containing tiles with interleaved buffers [#11812](https://github.com/CesiumGS/cesium/issues/11812)
+- Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
+- Fixed a bug where legacy B3DM files that contained glTF 1.0 data that used a `CONSTANT` technique in the `KHR_material_common` extension and only defined ambient- or emissive textures (but no diffuse textures) showed up without any texture [#11825](https://github.com/CesiumGS/cesium/pull/11825)
+- Fixed an error when the `screenSpaceEventHandler` was destroyed before `Viewer` [#10576](https://github.com/CesiumGS/cesium/issues/10576)
+- Fixed how `Camera.changed` handles changes in `roll`. [#11844](https://github.com/CesiumGS/cesium/pull/11844)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileset.disableCollision` has been deprecated and will be removed in 1.116. Use `Cesium3DTileset.enableCollision` instead.
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `I3SBuildingSceneLayerExplorer` widget for working with I3S Building Scene Layer data. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
+
+### 1.114 - 2024-02-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- By default, the screen space camera controller will no longer go inside or under instances of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+  - This behavior can be disabled by setting `Cesium3DTileset.disableCollision` to true.
+  - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
+- Clamping to ground, `HeightReference.CLAMP_TO_GROUND`, and `HeightReference.RELATIVE_TO_GROUND` now take into account 3D Tilesets. These opions will clamp to either 3D Tilesets or Terrain, whichever has a greater height. [#11604](https://github.com/CesiumGS/cesium/pull/11604)
+  - To restore previous behavior where an entity is clamped only to terrain or relative only to terrain, set `heightReference` to `HeightReference.CLAMP_TO_TERRAIN` or `HeightReference.RELATIVE_TO_TERRAIN` respectively.
+- Removed the need for node internal packages `http`, `https`, `url` and `zlib` in the `Resource` class. This means they do not need to be marked external by build tools anymore. [#11773](https://github.com/CesiumGS/cesium/pull/11773)
+  - This slightly changed the contents of the `RequestErrorEvent` error that is thrown in node environments when a request fails. The `response` property is now a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object instead of an [`http.IncomingMessage`](https://nodejs.org/docs/latest-v20.x/api/http.html#class-httpincomingmessage)
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. Furthermore, the default settings of this feature were tuned for improved performance. `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002. `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+- `PolygonGeometry.computeRectangle` has been removed. Use `PolygonGeometry.computeRectangleFromPositions` instead.
+
+##### Additions :tada:
+
+- Added `HeightReference.CLAMP_TO_TERRAIN`, `HeightReference.RELATIVE_TO_TERRAIN`, `HeightReference.CLAMP_TO_3D_TILE`, and `HeightReference.RELATIVE_TO_3D_TILE` to position relatve to terrain or 3D tilesets exclusively.[#11604](https://github.com/CesiumGS/cesium/pull/11604)
+- Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Added `Cesium3DTileset.disableCollision` to allow the camera from to go inside or below a 3D tileset, for instance, to be used with 3D Tiles interiors. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Fog rendering now applies to glTF models and 3D Tiles. This can be configured using `scene.fog` and `scene.atmosphere`. [#11744](https://github.com/CesiumGS/cesium/pull/11744)
+- Added `scene.atmosphere` to store common atmosphere lighting parameters. [#11744](https://github.com/CesiumGS/cesium/pull/11744) and [#11681](https://github.com/CesiumGS/cesium/issues/11681)
+- Added `createWorldBathymetryAsync` helper function to make it easier to load Bathymetry terrain. [#11790](https://github.com/CesiumGS/cesium/issues/11790)
+
+##### Fixes :wrench:
+
+- Fixed an issue where `DataSource` objects incorrectly shared a single `PolylineCollection` in the `PolylineGeometryUpdater`. Updated `PolylineGeometryUpdater` to create a distinct `PolylineCollection` instance per `DataSource`. This resolves the crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154).
+- Fixed a geometry displacement on iOS devices that was caused by NaN value in `czm_translateRelativeToEye` function. [#7100](https://github.com/CesiumGS/cesium/issues/7100)
+- Fixed improper scaling of ellipsoid inner radii in 3D mode. [#11656](https://github.com/CesiumGS/cesium/issues/11656) and [#10245](https://github.com/CesiumGS/cesium/issues/10245)
+- Updated `approximateTerrainHeights.json` to account for CWB heights to help with ground primitives when using Cesium World Bathymetry [#11805](https://github.com/CesiumGS/cesium/pull/11805)
+- Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
+- Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. [#10057](https://github.com/CesiumGS/cesium/issues/10057)
+- Fixed a bug where the `Cesium3DTileset` constructor was ignoring the options `dynamicScreenSpaceError`, `dynamicScreenSpaceErrorDensity`, `dynamicScreenSpaceErrorFactor` and `dynamicScreenSpaceErrorHeightFalloff`. [#11677](https://github.com/CesiumGS/cesium/issues/11677)
+- Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Property Textures in `EXT_structural_metadata`. [#11708](https://github.com/CesiumGS/cesium/issues/11708)
+- Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Feature ID Textures in `EXT_mesh_features`. [#11731](https://github.com/CesiumGS/cesium/issues/11731)
+- Fixed `Entity` documentation for `orientation` property. [#11762](https://github.com/CesiumGS/cesium/pull/11762)
+- The `EntityCollection#add` method was documented to throw a `DeveloperError` for duplicate IDs, but did throw a `RuntimeError` in this case. This is now changed to throw a `DeveloperError`. [#11776](https://github.com/CesiumGS/cesium/pull/11776)
+- Parts of the documentation have been updated to resolve potential issues with the generated TypedScript definitions. [#11776](https://github.com/CesiumGS/cesium/pull/11776)
+- Fixed type definition for `Camera.constrainedAxis`. [#11475](https://github.com/CesiumGS/cesium/issues/11475)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
+
 ### 1.113 - 2024-01-02
 
 #### @cesium/engine
